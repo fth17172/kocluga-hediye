@@ -11,8 +11,8 @@ GROQ_API_KEY = (
 )
 client = Groq(api_key=GROQ_API_KEY)
 
-# Güncel aktif Groq modelleri
-MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+# Güncel aktif modeller listesi
+MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"]
 
 s1 = [
     "Pratik",
