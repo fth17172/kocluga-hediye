@@ -1,14 +1,19 @@
 import os
+import traceback
 from flask import Flask, Response, jsonify, render_template_string, request
 from groq import Groq
 
 app = Flask(__name__)
 
+# API Key
 GROQ_API_KEY = (
     os.getenv("GROQ_API_KEY")
     or "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"
 )
 client = Groq(api_key=GROQ_API_KEY)
+
+# Model sıralaması (Ana model patlarsa yedeğe geçer)
+MODELS = ["llama-3.3-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"]
 
 s1 = [
     "Pratik",
@@ -247,7 +252,7 @@ HTML_TEMPLATE = """
                     document.getElementById('sonucMetin').innerText = data.hata || "Bir hata oluştu.";
                 }
             } catch (e) {
-                document.getElementById('sonucMetin').innerText = "Bağlantı hatası, tekrar deneyin.";
+                document.getElementById('sonucMetin').innerText = "Sunucu bağlantı hatası: " + e.message;
             } finally {
                 onerBtn.innerText = "✨ Öğretmenime Özel Menü Oluştur";
                 onerBtn.disabled = false;
@@ -269,9 +274,9 @@ HTML_TEMPLATE = """
                     body: JSON.stringify({yemek_adi: yemekAdi})
                 });
                 const data = await res.json();
-                document.getElementById('sonucMetin').innerText = data.tarif || "Tarif alınamadı.";
+                document.getElementById('sonucMetin').innerText = data.tarif || data.hata || "Tarif alınamadı.";
             } catch (e) {
-                document.getElementById('sonucMetin').innerText = "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar deneyin.";
+                document.getElementById('sonucMetin').innerText = "Tarif alırken sunucu hatası: " + e.message;
             } finally {
                 tarifBtn.innerText = "🎁 Detaylı Tarifi Getir";
                 tarifBtn.disabled = false;
@@ -281,6 +286,23 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
+
+
+def groq_call(prompt):
+    """Yedekli model çağırma sistemi"""
+    last_err = None
+    for model_name in MODELS:
+        try:
+            completion = client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}],
+                timeout=10.0,
+            )
+            return completion.choices[0].message.content.strip()
+        except Exception as e:
+            last_err = str(e)
+            continue
+    raise Exception(f"Tüm modeller başarısız oldu: {last_err}")
 
 
 @app.route("/")
@@ -307,17 +329,14 @@ def karar():
     )
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-        )
-        cevap = completion.choices[0].message.content.strip()
+        cevap = groq_call(prompt)
         secenekler = [
             s.strip() for s in cevap.split(",") if len(s.strip()) > 1
         ]
         return jsonify({"secenekler": secenekler})
     except Exception as e:
-        return jsonify({"hata": "Bağlantı hatası, tekrar deneyin."})
+        print(traceback.format_exc())
+        return jsonify({"hata": f"Groq API Hatası: {str(e)}"})
 
 
 @app.route("/api/tarif", methods=["POST"])
@@ -331,20 +350,11 @@ def tarif():
     prompt = f"'{yemek_adi}' yemeğinin detaylı tarifini ve püf noktalarını saygılı, özenli ve kibar bir dille öğretmenimiz için yaz."
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return jsonify({"tarif": completion.choices[0].message.content})
+        cevap = groq_call(prompt)
+        return jsonify({"tarif": cevap})
     except Exception as e:
-        return jsonify(
-            {
-                "tarif": (
-                    "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar"
-                    " deneyin."
-                )
-            }
-        )
+        print(traceback.format_exc())
+        return jsonify({"hata": f"Groq API Hatası: {str(e)}"})
 
 
 @app.route("/manifest.json")
