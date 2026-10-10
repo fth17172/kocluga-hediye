@@ -5,15 +5,14 @@ from groq import Groq
 
 app = Flask(__name__)
 
-# API Key
 GROQ_API_KEY = (
     os.getenv("GROQ_API_KEY")
     or "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"
 )
 client = Groq(api_key=GROQ_API_KEY)
 
-# Model sıralaması (Ana model patlarsa yedeğe geçer)
-MODELS = ["llama-3.3-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"]
+# Güncel aktif Groq modelleri
+MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
 
 s1 = [
     "Pratik",
@@ -289,7 +288,6 @@ HTML_TEMPLATE = """
 
 
 def groq_call(prompt):
-    """Yedekli model çağırma sistemi"""
     last_err = None
     for model_name in MODELS:
         try:
