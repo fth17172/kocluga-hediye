@@ -4,7 +4,6 @@ from groq import Groq
 
 app = Flask(__name__)
 
-# Yeni API Anahtarın
 GROQ_API_KEY = (
     os.getenv("GROQ_API_KEY")
     or "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"
@@ -66,85 +65,151 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sultanımın Mutfak Rehberi</title>
+    <title>Öğretmenime Hediye - Mutfak Rehberi</title>
     
+    <!-- PWA Meta Etiketleri -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#e11d48">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mutfak Rehberi">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <style>
         body { -webkit-tap-highlight-color: transparent; }
         select { -webkit-appearance: none; }
     </style>
 </head>
-<body class="p-3 sm:p-5 max-w-2xl mx-auto bg-rose-50/40 text-slate-800 antialiased">
+<body class="p-3 sm:p-5 max-w-2xl mx-auto bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 antialiased">
 
-    <!-- Başlık -->
-    <div class="text-center my-4">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-rose-600 tracking-tight">🌹 Sultanımın Mutfak Rehberi 🌹</h1>
+    <!-- Header & Dark Mode Toggle -->
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">👨‍🏫 Öğretmenimin Mutfak Asistanı</h1>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </div>
+
+    <!-- PWA Yükleme Banner (Android/iOS) -->
+    <div id="pwaBanner" class="hidden mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex justify-between items-center text-sm">
+        <span class="text-blue-600 dark:text-blue-400 font-medium text-xs sm:text-sm">Uygulama olarak yükle</span>
+        <button id="pwaInstallBtn" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs active:scale-95 shadow">Yükle</button>
     </div>
 
     <!-- Tercihler Kartı -->
-    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-rose-100 mb-5">
-        <h2 class="text-lg font-bold text-slate-700 mb-3">🛠️ Tercihlerini Yap</h2>
+    <div class="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/60 mb-5">
+        <h2 class="text-base font-bold text-slate-700 dark:text-slate-200 mb-3">🛠️ Tercihleri Belirle</h2>
         
         <form id="menuForm" class="space-y-3">
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">1. Pişirme Tarzı?</label>
-                <select id="q1" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">1. Pişirme Tarzı?</label>
+                <select id="q1" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Seçiniz...</option>
                     {% for item in s1 %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">2. Ana İçerik?</label>
-                <select id="q2" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">2. Ana İçerik?</label>
+                <select id="q2" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Seçiniz...</option>
                     {% for item in s2 %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">3. Ne Zaman Yenecek?</label>
-                <select id="q6" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">3. Ne Zaman Yenecek?</label>
+                <select id="q6" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Seçiniz...</option>
                     {% for item in s6 %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">4. Yanına Ne Gitsin?</label>
-                <select id="q10" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">4. Yanına Ne Gitsin?</label>
+                <select id="q10" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Seçiniz...</option>
                     {% for item in s10 %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
                 </select>
             </div>
 
-            <button type="button" onclick="menuOlustur()" id="onerBtn" class="w-full mt-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-rose-500/20 transition text-base">
-                ✨ Sultanıma Özel Menü Oluştur
+            <button type="button" onclick="menuOlustur()" id="onerBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition text-base">
+                ✨ Öğretmenime Özel Menü Oluştur
             </button>
         </form>
     </div>
 
     <!-- Seçim Alanı -->
-    <div id="secimAlani" class="hidden bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-rose-100 mb-5 space-y-3">
-        <label class="block font-bold text-rose-600 text-sm">🌹 Senin İçin Seçtiğim 5 Lezzet</label>
-        <select id="yemekSecim" class="w-full p-3 rounded-xl border border-rose-200 bg-rose-50/30 text-sm font-medium focus:outline-none"></select>
+    <div id="secimAlani" class="hidden bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/60 mb-5 space-y-3">
+        <label class="block font-bold text-blue-600 dark:text-blue-400 text-sm">📋 Seçilen Lezzet Alternatifleri</label>
+        <select id="yemekSecim" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm font-medium focus:outline-none"></select>
         
-        <button type="button" onclick="tarifGetir()" id="tarifBtn" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow transition text-sm">
+        <button type="button" onclick="tarifGetir()" id="tarifBtn" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow transition text-sm">
             🎁 Detaylı Tarifi Getir
         </button>
     </div>
 
     <!-- Tarif Sonuç Kutusu -->
-    <div class="bg-rose-500/5 border-2 border-rose-600/30 p-5 rounded-2xl shadow-sm">
-        <div id="sonucMetin" class="prose prose-rose max-w-none text-slate-700 text-sm leading-relaxed whitespace-pre-line">
-            ### 📜 Tarif burada belirecek...
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 p-5 rounded-2xl shadow-sm">
+        <div id="sonucMetin" class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line font-mono">
+            📜 Tarif burada belirecek...
         </div>
     </div>
 
     <script>
+        // --- DARK MODE MANTIĞI ---
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').textContent = '☀️';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').textContent = '🌙';
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            applyTheme(savedTheme === 'dark');
+        } else {
+            applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // --- PWA SERVICE WORKER & INSTALL PROMPT ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwaBanner');
+            if (banner) banner.classList.remove('hidden');
+        });
+
+        document.getElementById('pwaInstallBtn')?.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    document.getElementById('pwaBanner').classList.add('hidden');
+                });
+            }
+        });
+
+        // --- API İŞLEMLERİ ---
         async function menuOlustur() {
             const q1 = document.getElementById('q1').value;
             const q2 = document.getElementById('q2').value;
@@ -154,7 +219,7 @@ HTML_TEMPLATE = """
             const inputs = [q1, q2, q6, q10].filter(x => x !== "");
 
             if (inputs.length === 0) {
-                document.getElementById('sonucMetin').innerText = "### Lütfen en az birkaç soru cevapla sultanım.";
+                document.getElementById('sonucMetin.innerText = "Lütfen en az birkaç kriter seçin öğretmenim.";
                 return;
             }
 
@@ -180,14 +245,14 @@ HTML_TEMPLATE = """
                         select.appendChild(opt);
                     });
                     document.getElementById('secimAlani').classList.remove('hidden');
-                    document.getElementById('sonucMetin').innerText = "### Menüden bir yemek seçip 'Detaylı Tarifi Getir' butonuna bas sultanım.";
+                    document.getElementById('sonucMetin').innerText = "Listeden bir yemek seçip 'Detaylı Tarifi Getir' butonuna basabilirsiniz.";
                 } else {
                     document.getElementById('sonucMetin').innerText = data.hata || "Bir hata oluştu.";
                 }
             } catch (e) {
-                document.getElementById('sonucMetin').innerText = "Bağlantı hatası, tekrar dene sultanım.";
+                document.getElementById('sonucMetin').innerText = "Bağlantı hatası, tekrar deneyin.";
             } finally {
-                onerBtn.innerText = "✨ Sultanıma Özel Menü Oluştur";
+                onerBtn.innerText = "✨ Öğretmenime Özel Menü Oluştur";
                 onerBtn.disabled = false;
             }
         }
@@ -209,7 +274,7 @@ HTML_TEMPLATE = """
                 const data = await res.json();
                 document.getElementById('sonucMetin').innerText = data.tarif || "Tarif alınamadı.";
             } catch (e) {
-                document.getElementById('sonucMetin').innerText = "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar dene.";
+                document.getElementById('sonucMetin').innerText = "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar deneyin.";
             } finally {
                 tarifBtn.innerText = "🎁 Detaylı Tarifi Getir";
                 tarifBtn.disabled = false;
@@ -235,15 +300,11 @@ def karar():
 
     if not tercihler:
         return jsonify(
-            {
-                "hata": (
-                    "### Lütfen en az birkaç soru cevapla sultanım."
-                )
-            }
+            {"hata": "Lütfen en az birkaç kriter seçin öğretmenim."}
         )
 
     prompt = (
-        f"Annem için yemek seçiyoruz. Tercihleri: {tercihler}. "
+        f"Öğretmenimiz için yemek seçiyoruz. Tercihleri: {tercihler}. "
         "Bu kriterlere uygun en lezzetli 5 yemek ismini SADECE virgülle ayırarak yaz. "
         "ASLA açıklama yapma. Örnek: Mantı, Sarma, Hünkar Beğendi"
     )
@@ -259,9 +320,7 @@ def karar():
         ]
         return jsonify({"secenekler": secenekler})
     except Exception as e:
-        return jsonify(
-            {"hata": "Bağlantı hatası, tekrar dene sultanım."}
-        )
+        return jsonify({"hata": "Bağlantı hatası, tekrar deneyin."})
 
 
 @app.route("/api/tarif", methods=["POST"])
@@ -272,7 +331,7 @@ def tarif():
     if not yemek_adi:
         return jsonify({"tarif": ""})
 
-    prompt = f"'{yemek_adi}' yemeğinin detaylı tarifini ve püf noktalarını annem için sevgi dolu bir dille yaz. Sonuna 'Anneler günün kutlu olsun sultanım' ekle."
+    prompt = f"'{yemek_adi}' yemeğinin detaylı tarifini ve püf noktalarını saygılı, özenli ve kibar bir dille öğretmenimiz için yaz."
 
     try:
         completion = client.chat.completions.create(
@@ -284,7 +343,8 @@ def tarif():
         return jsonify(
             {
                 "tarif": (
-                    "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar dene."
+                    "Tarif hazırlanırken bir sorun oluştu, lütfen tekrar"
+                    " deneyin."
                 )
             }
         )
@@ -293,17 +353,18 @@ def tarif():
 @app.route("/manifest.json")
 def manifest():
     manifest_data = {
-        "name": "Sultanımın Mutfak Rehberi",
-        "short_name": "Mutfak Rehberi",
+        "name": "Öğretmenimin Mutfak Asistanı",
+        "short_name": "Mutfak Asistanı",
         "start_url": "/",
         "display": "standalone",
-        "background_color": "#fff1f2",
-        "theme_color": "#e11d48",
+        "background_color": "#0f172a",
+        "theme_color": "#1e293b",
         "icons": [
             {
-                "src": "https://cdn-icons-png.flaticon.com/512/1830/1830839.png",
+                "src": "https://cdn-icons-png.flaticon.com/512/3429/3429149.png",
                 "sizes": "512x512",
                 "type": "image/png",
+                "purpose": "any maskable",
             }
         ],
     }
@@ -311,6 +372,15 @@ def manifest():
         render_template_string("{{ data|tojson }}", data=manifest_data),
         mimetype="application/json",
     )
+
+
+@app.route("/sw.js")
+def service_worker():
+    sw_code = """
+    self.addEventListener('install', (e) => { self.skipWaiting(); });
+    self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });
+    """
+    return Response(sw_code, mimetype="application/javascript")
 
 
 if __name__ == "__main__":
