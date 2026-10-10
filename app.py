@@ -67,7 +67,6 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Öğretmenime Hediye - Mutfak Rehberi</title>
     
-    <!-- PWA Meta Etiketleri -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
@@ -90,15 +89,15 @@ HTML_TEMPLATE = """
     <!-- Header & Dark Mode Toggle -->
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">👨‍🏫 Öğretmenimin Mutfak Asistanı</h1>
-        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition">
+        <button type="button" onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition cursor-pointer">
             <span id="themeIcon">🌙</span>
         </button>
     </div>
 
-    <!-- PWA Yükleme Banner (Android/iOS) -->
+    <!-- PWA Yükleme Banner -->
     <div id="pwaBanner" class="hidden mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex justify-between items-center text-sm">
         <span class="text-blue-600 dark:text-blue-400 font-medium text-xs sm:text-sm">Uygulama olarak yükle</span>
-        <button id="pwaInstallBtn" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs active:scale-95 shadow">Yükle</button>
+        <button id="pwaInstallBtn" type="button" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs active:scale-95 shadow cursor-pointer">Yükle</button>
     </div>
 
     <!-- Tercihler Kartı -->
@@ -138,7 +137,7 @@ HTML_TEMPLATE = """
                 </select>
             </div>
 
-            <button type="button" onclick="menuOlustur()" id="onerBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition text-base">
+            <button type="button" onclick="menuOlustur()" id="onerBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition text-base cursor-pointer">
                 ✨ Öğretmenime Özel Menü Oluştur
             </button>
         </form>
@@ -149,20 +148,18 @@ HTML_TEMPLATE = """
         <label class="block font-bold text-blue-600 dark:text-blue-400 text-sm">📋 Seçilen Lezzet Alternatifleri</label>
         <select id="yemekSecim" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-sm font-medium focus:outline-none"></select>
         
-        <button type="button" onclick="tarifGetir()" id="tarifBtn" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow transition text-sm">
+        <button type="button" onclick="tarifGetir()" id="tarifBtn" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl shadow transition text-sm cursor-pointer">
             🎁 Detaylı Tarifi Getir
         </button>
     </div>
 
     <!-- Tarif Sonuç Kutusu -->
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 p-5 rounded-2xl shadow-sm">
-        <div id="sonucMetin" class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line font-mono">
-            📜 Tarif burada belirecek...
-        </div>
+        <div id="sonucMetin" class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line font-mono">📜 Tarif burada belirecek...</div>
     </div>
 
     <script>
-        // --- DARK MODE MANTIĞI ---
+        // --- DARK MODE ---
         function applyTheme(isDark) {
             if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -186,7 +183,7 @@ HTML_TEMPLATE = """
             document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
         }
 
-        // --- PWA SERVICE WORKER & INSTALL PROMPT ---
+        // --- PWA ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
         }
@@ -209,7 +206,7 @@ HTML_TEMPLATE = """
             }
         });
 
-        // --- API İŞLEMLERİ ---
+        // --- API ---
         async function menuOlustur() {
             const q1 = document.getElementById('q1').value;
             const q2 = document.getElementById('q2').value;
@@ -219,7 +216,7 @@ HTML_TEMPLATE = """
             const inputs = [q1, q2, q6, q10].filter(x => x !== "");
 
             if (inputs.length === 0) {
-                document.getElementById('sonucMetin.innerText = "Lütfen en az birkaç kriter seçin öğretmenim.";
+                document.getElementById('sonucMetin').innerText = "Lütfen en az birkaç kriter seçin öğretmenim.";
                 return;
             }
 
